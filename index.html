@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Session</title>
+    <style>
+        body { background-color: #050505; color: #00ff33; font-family: 'Courier New', Courier, monospace; padding: 20px; font-size: 15px; line-height: 1.5; margin: 0; }
+        .line { margin-bottom: 8px; white-space: pre-wrap; }
+        input { background: transparent; border: none; color: #00ff33; font-family: inherit; font-size: inherit; outline: none; width: 60%; caret-color: #00ff33; }
+        .header-box { color: #ffffff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="terminal">
+    <div class="line">Establishing secure connection...</div>
+    <div class="line">Connection successful. Welcome to my space.</div>
+    <div class="line">--------------------------------------------------</div>
+    <div class="line" id="prompt-line">Enter Your Name to Continue: <input type="text" id="username" autofocus autocomplete="off"></div>
+</div>
+
+<script>
+// --- CONFIGURATION ---
+// Paste your Discord Webhook URL between the quotes below
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
+
+const input = document.getElementById('username');
+const terminal = document.getElementById('terminal');
+
+input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+        const name = input.value.trim() || "Guest_User";
+        
+        document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
+        
+        if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+            fetch(DISCORD_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: `🔔 **New Visitor:** \`${name}\` opened your bio!` })
+            }).catch(err => console.error("Logging failed:", err));
+        }
+
+        setTimeout(() => { showBio(name); }, 600);
+    }
+});
+
+function showBio(visitorName) {
+    const bioLines = [
+        `\n[SYSTEM] Access granted. Hello, ${visitorName}!`,
+        "[SYSTEM] Loading profile details...",
+        "==================================================",
+        "  W E L C O M E   T O   M Y   B I O",
+        "==================================================",
+        "  👉 USER: SAJID",
+        "==================================================",
+        "ABOUT ME:   Just a guy navigating through new things.",
+        "LIKES:      Video games and Marvel comics.",
+        "CURRENTLY:  Exploring new tech and building cool spaces.",
+        "--------------------------------------------------",
+        "STATUS:     Catch me on Instagram DMs if you want to chat.",
+        "\nsession_closed_bye@instagram_bio:~$"
+    ];
+
+    let delay = 0;
+    bioLines.forEach(text => {
+        setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = 'line';
+            // Make the name and header lines pop out in bright white
+            if (text.includes("W E L C O M E") || text.includes("USER: SAJID")) {
+                div.className = 'line header-box';
+            }
+            div.textContent = text;
+            terminal.appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);
+        }, delay);
+        delay += 250;
+    });
+}
+</script>
+</body>
+</html>
