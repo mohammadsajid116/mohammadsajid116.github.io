@@ -21,10 +21,7 @@
             overflow-x: hidden;
         }
         .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; }
-        
-        /* Flex wrapper to keep input and button nicely aligned */
         .input-container { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; width: 100%; }
-        
         input { 
             background: transparent; 
             border: none; 
@@ -37,10 +34,8 @@
             caret-color: #00ff33; 
             padding: 2px 0;
             margin: 0;
-            border-bottom: 1px dashed #00ff33; /* Soft underline so they see where to type */
+            border-bottom: 1px dashed #00ff33;
         }
-        
-        /* Terminal style clickable button */
         .term-btn {
             background-color: #00ff33;
             color: #050505;
@@ -54,64 +49,99 @@
             text-transform: uppercase;
             box-shadow: 0 0 5px rgba(0, 255, 51, 0.4);
         }
-        .term-btn:active {
-            background-color: #ffffff;
-            color: #050505;
-        }
-        
+        .term-btn:active { background-color: #ffffff; color: #050505; }
         .header-box { color: #ffffff; font-weight: bold; }
         .tap-hint { color: #888888; font-style: italic; font-size: 12px; margin-top: 15px; }
+        .timeout-text { color: #ff3333; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="terminal">
-    <div class="line">Establishing secure connection...</div>
-    <div class="line">Connection successful. Welcome to my space.</div>
-    <div class="line">--------------------------------------------------</div>
-    <div class="line" id="prompt-line">
-        <span>Enter Your Name to Continue:</span>
-        <div class="input-container">
-            <input type="text" id="username" autocomplete="off" placeholder="...">
-            <button id="submit-btn" class="term-btn">[SUBMIT]</button>
-        </div>
-    </div>
-    <div class="line tap-hint" id="hint-text">(📲 Tap anywhere on the screen to type)</div>
-</div>
+<div id="terminal"></div>
 
 <script>
 // --- CONFIGURATION ---
 // Paste your Discord Webhook URL between the quotes below
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
+const TIMEOUT_DURATION = 5 * 60 * 1000; // Locked strictly to 5 minutes
 
-const input = document.getElementById('username');
-const submitBtn = document.getElementById('submit-btn');
 const terminal = document.getElementById('terminal');
-const hint = document.getElementById('hint-text');
+let idleTimer;
+let inputElement;
+let submitBtnElement;
 
-// FULL-SCREEN TAP DETECTOR (Ignores clicks on the submit button itself)
-document.addEventListener('click', function(e) {
-    if (e.target !== submitBtn) {
-        input.focus();
+function initTerminal(isTimeout = false) {
+    terminal.innerHTML = ''; 
+    if (isTimeout) {
+        appendLine("[SYSTEM WARNING] Idle session terminated.", "timeout-text");
+        appendLine("[CRITICAL] Connection closed due to inactivity.\n", "timeout-text");
     }
+    appendLine("Establishing secure connection...");
+    appendLine("Connection successful. Welcome to my space.");
+    appendLine("--------------------------------------------------");
+    
+    const promptLine = document.createElement('div');
+    promptLine.className = 'line';
+    promptLine.id = 'prompt-line';
+    promptLine.innerHTML = `
+        <span>Enter Your Name to Continue:</span>
+        <div class="input-container">
+            <input type="text" id="username" autocomplete="off" placeholder="...">
+            <button id="submit-btn" class="term-btn">[SUBMIT]</button>
+        </div>
+    `;
+    terminal.appendChild(promptLine);
+    appendLine("(📲 Tap anywhere on the screen to type)", "tap-hint");
+    
+    inputElement = document.getElementById('username');
+    submitBtnElement = document.getElementById('submit-btn');
+    
+    inputElement.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') processSelection();
+    });
+    submitBtnElement.addEventListener('click', function(e) {
+        e.stopPropagation();
+        processSelection();
+    });
+}
+
+document.addEventListener('click', function(e) {
+    if (inputElement && e.target !== submitBtnElement) inputElement.focus();
 });
 document.addEventListener('touchstart', function(e) {
-    if (e.target !== submitBtn) {
-        input.focus();
-    }
+    if (inputElement && e.target !== submitBtnElement) inputElement.focus();
 });
 
-// CORE FUNCTION TO RUN LOGS AND SHOW BIO
+function appendLine(text, customClass = "") {
+    const div = document.createElement('div');
+    div.className = 'line ' + customClass;
+    div.textContent = text;
+    terminal.appendChild(div);
+    window.scrollTo(0, document.body.scrollHeight);
+}
+
+function startIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+        initTerminal(true);
+    }, TIMEOUT_DURATION);
+}
+
+['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, () => {
+        if (!document.getElementById('username')) {
+            startIdleTimer();
+        }
+    });
+});
+
 function processSelection() {
-    const name = input.value.trim() || "Guest_User";
+    const name = inputElement.value.trim() || "Guest_User";
+    const hint = document.querySelector('.tap-hint');
+    if(hint) hint.remove();
     
-    // Hide active touch hint
-    if(hint) hint.style.display = 'none';
-    
-    // Lock down input and show name selection static text
     document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
     
-    // Transmit data to your Discord Server
     if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
         fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
@@ -122,19 +152,6 @@ function processSelection() {
 
     setTimeout(() => { showBio(name); }, 600);
 }
-
-// Trigger 1: Pressing 'Enter' on mobile keyboard
-input.addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-        processSelection();
-    }
-});
-
-// Trigger 2: Clicking the on-screen green button
-submitBtn.addEventListener('click', function(e) {
-    e.stopPropagation(); // Prevents full screen click interference
-    processSelection();
-});
 
 function showBio(visitorName) {
     const bioLines = [
@@ -167,7 +184,11 @@ function showBio(visitorName) {
         }, delay);
         delay += 250;
     });
+    
+    startIdleTimer();
 }
+
+window.onload = () => { initTerminal(false); };
 </script>
 </body>
 </html>
