@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Terminal Session</title>
     <style>
-        /* This makes the entire body element fill up 100% of the mobile screen viewport */
         html, body { 
             height: 100%; 
             background-color: #050505; 
@@ -20,9 +19,12 @@
             font-size: 14px; 
             line-height: 1.5; 
             overflow-x: hidden;
-            cursor: pointer; /* Gives a clue that the whole page is interactive */
         }
-        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; }
+        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; }
+        
+        /* Flex wrapper to keep input and button nicely aligned */
+        .input-container { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; width: 100%; }
+        
         input { 
             background: transparent; 
             border: none; 
@@ -30,11 +32,33 @@
             font-family: inherit; 
             font-size: inherit; 
             outline: none; 
-            width: 50%; 
+            flex-grow: 1;
+            max-width: 150px;
             caret-color: #00ff33; 
-            padding: 0;
+            padding: 2px 0;
             margin: 0;
+            border-bottom: 1px dashed #00ff33; /* Soft underline so they see where to type */
         }
+        
+        /* Terminal style clickable button */
+        .term-btn {
+            background-color: #00ff33;
+            color: #050505;
+            border: none;
+            padding: 4px 10px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 3px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 5px rgba(0, 255, 51, 0.4);
+        }
+        .term-btn:active {
+            background-color: #ffffff;
+            color: #050505;
+        }
+        
         .header-box { color: #ffffff; font-weight: bold; }
         .tap-hint { color: #888888; font-style: italic; font-size: 12px; margin-top: 15px; }
     </style>
@@ -45,7 +69,13 @@
     <div class="line">Establishing secure connection...</div>
     <div class="line">Connection successful. Welcome to my space.</div>
     <div class="line">--------------------------------------------------</div>
-    <div class="line" id="prompt-line">Enter Your Name to Continue: <input type="text" id="username" autocomplete="off"></div>
+    <div class="line" id="prompt-line">
+        <span>Enter Your Name to Continue:</span>
+        <div class="input-container">
+            <input type="text" id="username" autocomplete="off" placeholder="...">
+            <button id="submit-btn" class="term-btn">[SUBMIT]</button>
+        </div>
+    </div>
     <div class="line tap-hint" id="hint-text">(📲 Tap anywhere on the screen to type)</div>
 </div>
 
@@ -55,35 +85,55 @@
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
 
 const input = document.getElementById('username');
+const submitBtn = document.getElementById('submit-btn');
 const terminal = document.getElementById('terminal');
 const hint = document.getElementById('hint-text');
 
-// FULL-SCREEN TAP DETECTOR: Clicking anywhere on the screen pulls up the keyboard instantly
-document.addEventListener('click', function() {
-    input.focus();
+// FULL-SCREEN TAP DETECTOR (Ignores clicks on the submit button itself)
+document.addEventListener('click', function(e) {
+    if (e.target !== submitBtn) {
+        input.focus();
+    }
 });
-document.addEventListener('touchstart', function() {
-    input.focus();
+document.addEventListener('touchstart', function(e) {
+    if (e.target !== submitBtn) {
+        input.focus();
+    }
 });
 
+// CORE FUNCTION TO RUN LOGS AND SHOW BIO
+function processSelection() {
+    const name = input.value.trim() || "Guest_User";
+    
+    // Hide active touch hint
+    if(hint) hint.style.display = 'none';
+    
+    // Lock down input and show name selection static text
+    document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
+    
+    // Transmit data to your Discord Server
+    if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+        fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: `🔔 **New Visitor:** \`${name}\` opened your bio!` })
+        }).catch(err => console.error("Logging failed:", err));
+    }
+
+    setTimeout(() => { showBio(name); }, 600);
+}
+
+// Trigger 1: Pressing 'Enter' on mobile keyboard
 input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
-        const name = input.value.trim() || "Guest_User";
-        
-        // Hide the active touch hint and the input line
-        if(hint) hint.style.display = 'none';
-        document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
-        
-        if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
-            fetch(DISCORD_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: `🔔 **New Visitor:** \`${name}\` opened your bio!` })
-            }).catch(err => console.error("Logging failed:", err));
-        }
-
-        setTimeout(() => { showBio(name); }, 600);
+        processSelection();
     }
+});
+
+// Trigger 2: Clicking the on-screen green button
+submitBtn.addEventListener('click', function(e) {
+    e.stopPropagation(); // Prevents full screen click interference
+    processSelection();
 });
 
 function showBio(visitorName) {
