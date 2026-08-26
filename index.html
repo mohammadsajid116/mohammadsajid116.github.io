@@ -5,16 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Terminal Session</title>
     <style>
-        /* Mobile-optimized sizing and spacing */
-        body { 
+        /* This makes the entire body element fill up 100% of the mobile screen viewport */
+        html, body { 
+            height: 100%; 
             background-color: #050505; 
+            margin: 0; 
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body { 
             color: #00ff33; 
             font-family: 'Courier New', Courier, monospace; 
             padding: 15px; 
-            font-size: 13px; 
-            line-height: 1.4; 
-            margin: 0; 
+            font-size: 14px; 
+            line-height: 1.5; 
             overflow-x: hidden;
+            cursor: pointer; /* Gives a clue that the whole page is interactive */
         }
         .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; }
         input { 
@@ -30,6 +36,7 @@
             margin: 0;
         }
         .header-box { color: #ffffff; font-weight: bold; }
+        .tap-hint { color: #888888; font-style: italic; font-size: 12px; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -38,7 +45,8 @@
     <div class="line">Establishing secure connection...</div>
     <div class="line">Connection successful. Welcome to my space.</div>
     <div class="line">--------------------------------------------------</div>
-    <div class="line" id="prompt-line">Enter Your Name to Continue: <input type="text" id="username" autofocus autocomplete="off"></div>
+    <div class="line" id="prompt-line">Enter Your Name to Continue: <input type="text" id="username" autocomplete="off"></div>
+    <div class="line tap-hint" id="hint-text">(📲 Tap anywhere on the screen to type)</div>
 </div>
 
 <script>
@@ -48,17 +56,13 @@ const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/154205960340635654
 
 const input = document.getElementById('username');
 const terminal = document.getElementById('terminal');
+const hint = document.getElementById('hint-text');
 
-// FORCE KEYBOARD AUTO-POPUP ON LOAD
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        input.focus();
-        input.click(); // Extra trigger for mobile browsers
-    }, 100);
+// FULL-SCREEN TAP DETECTOR: Clicking anywhere on the screen pulls up the keyboard instantly
+document.addEventListener('click', function() {
+    input.focus();
 });
-
-// FORCE KEYBOARD IF USER ACCIDENTALLY CLICKS BLANK SPACE
-document.body.addEventListener('click', () => {
+document.addEventListener('touchstart', function() {
     input.focus();
 });
 
@@ -66,6 +70,8 @@ input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
         const name = input.value.trim() || "Guest_User";
         
+        // Hide the active touch hint and the input line
+        if(hint) hint.style.display = 'none';
         document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
         
         if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
