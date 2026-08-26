@@ -2,12 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Terminal Session</title>
     <style>
-        body { background-color: #050505; color: #00ff33; font-family: 'Courier New', Courier, monospace; padding: 20px; font-size: 15px; line-height: 1.5; margin: 0; }
-        .line { margin-bottom: 8px; white-space: pre-wrap; }
-        input { background: transparent; border: none; color: #00ff33; font-family: inherit; font-size: inherit; outline: none; width: 60%; caret-color: #00ff33; }
+        /* Mobile-optimized sizing and spacing */
+        body { 
+            background-color: #050505; 
+            color: #00ff33; 
+            font-family: 'Courier New', Courier, monospace; 
+            padding: 15px; 
+            font-size: 13px; 
+            line-height: 1.4; 
+            margin: 0; 
+            overflow-x: hidden;
+        }
+        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; }
+        input { 
+            background: transparent; 
+            border: none; 
+            color: #00ff33; 
+            font-family: inherit; 
+            font-size: inherit; 
+            outline: none; 
+            width: 50%; 
+            caret-color: #00ff33; 
+            padding: 0;
+            margin: 0;
+        }
         .header-box { color: #ffffff; font-weight: bold; }
     </style>
 </head>
@@ -23,10 +44,23 @@
 <script>
 // --- CONFIGURATION ---
 // Paste your Discord Webhook URL between the quotes below
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
+const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE";
 
 const input = document.getElementById('username');
 const terminal = document.getElementById('terminal');
+
+// FORCE KEYBOARD AUTO-POPUP ON LOAD
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        input.focus();
+        input.click(); // Extra trigger for mobile browsers
+    }, 100);
+});
+
+// FORCE KEYBOARD IF USER ACCIDENTALLY CLICKS BLANK SPACE
+document.body.addEventListener('click', () => {
+    input.focus();
+});
 
 input.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
@@ -68,7 +102,6 @@ function showBio(visitorName) {
         setTimeout(() => {
             const div = document.createElement('div');
             div.className = 'line';
-            // Make the name and header lines pop out in bright white
             if (text.includes("W E L C O M E") || text.includes("USER: SAJID")) {
                 div.className = 'line header-box';
             }
