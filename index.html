@@ -69,6 +69,21 @@ const terminal = document.getElementById('terminal');
 let idleTimer;
 let inputElement;
 let submitBtnElement;
+let totalVisits = "Fetching...";
+
+// Fetch traffic data from the free CounterAPI database
+function fetchHitCounter() {
+    fetch("https://counterapi.dev")
+        .then(response => response.json())
+        .then(data => {
+            if(data && data.count) {
+                totalVisits = data.count;
+            }
+        })
+        .catch(err => {
+            totalVisits = "Dynamic Data Offline";
+        });
+}
 
 function initTerminal(isTimeout = false) {
     terminal.innerHTML = ''; 
@@ -166,6 +181,7 @@ function showBio(visitorName) {
         "LIKES:      Video games and Marvel comics.",
         "CURRENTLY:  Exploring new tech and building cool spaces.",
         "--------------------------------------------------",
+        "TRAFFIC:    " + totalVisits + " total packets processed.",
         "STATUS:     Catch me on Instagram DMs if you want to chat.",
         "\nsession_closed_bye@instagram_bio:~$"
     ];
@@ -188,7 +204,10 @@ function showBio(visitorName) {
     startIdleTimer();
 }
 
-window.onload = () => { initTerminal(false); };
+window.onload = () => { 
+    fetchHitCounter(); 
+    initTerminal(false); 
+};
 </script>
 </body>
 </html>
