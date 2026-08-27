@@ -63,15 +63,15 @@
 // --- CONFIGURATION ---
 // Paste your Discord Webhook URL between the quotes below
 const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
-const TIMEOUT_DURATION = 5 * 60 * 1000; // Locked strictly to 5 minutes
+const TIMEOUT_DURATION = 5 * 60 * 1000; 
 
 const terminal = document.getElementById('terminal');
 let idleTimer;
 let inputElement;
 let submitBtnElement;
-let totalVisits = "Fetching...";
+let totalVisits = "0";
 
-// Fetch traffic data from the free CounterAPI database
+// Fetch traffic data from the updated free CounterAPI v2 database
 function fetchHitCounter() {
     fetch("https://counterapi.dev")
         .then(response => response.json())
@@ -81,7 +81,7 @@ function fetchHitCounter() {
             }
         })
         .catch(err => {
-            totalVisits = "Dynamic Data Offline";
+            console.error("Counter fetch failed:", err);
         });
 }
 
