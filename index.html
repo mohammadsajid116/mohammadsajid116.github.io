@@ -69,19 +69,22 @@ const terminal = document.getElementById('terminal');
 let idleTimer;
 let inputElement;
 let submitBtnElement;
-let totalVisits = "0";
+let totalVisits = "1";
 
-// Fetch traffic data from the updated free CounterAPI v2 database
+// Fetch traffic data from an open registration-free counter API
 function fetchHitCounter() {
-    fetch("https://counterapi.dev")
+    fetch("https://countapi.xyz")
         .then(response => response.json())
         .then(data => {
-            if(data && data.count) {
-                totalVisits = data.count;
+            if(data && data.value) {
+                totalVisits = data.value;
             }
         })
         .catch(err => {
-            console.error("Counter fetch failed:", err);
+            // Backup tracker endpoint if primary has cross-origin delay
+            fetch("https://count.co")
+                .then(res => res.json())
+                .then(d => { if(d && d.count) totalVisits = d.count; });
         });
 }
 
