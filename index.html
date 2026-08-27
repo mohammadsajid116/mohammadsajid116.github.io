@@ -69,23 +69,16 @@ const terminal = document.getElementById('terminal');
 let idleTimer;
 let inputElement;
 let submitBtnElement;
-let totalVisits = "1";
 
-// Fetch traffic data from an open registration-free counter API
-function fetchHitCounter() {
-    fetch("https://countapi.xyz")
-        .then(response => response.json())
-        .then(data => {
-            if(data && data.value) {
-                totalVisits = data.value;
-            }
-        })
-        .catch(err => {
-            // Backup tracker endpoint if primary has cross-origin delay
-            fetch("https://count.co")
-                .then(res => res.json())
-                .then(d => { if(d && d.count) totalVisits = d.count; });
-        });
+// ALERT DISCORD THE INSTANT THE PAGE LOADS
+function alertPageLoad() {
+    if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+        fetch(DISCORD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: `👀 **Traffic Alert:** Someone just clicked your Instagram bio link! (Waiting for name...)` })
+        }).catch(err => console.error("Load logging failed:", err));
+    }
 }
 
 function initTerminal(isTimeout = false) {
@@ -164,7 +157,7 @@ function processSelection() {
         fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: `🔔 **New Visitor:** \`${name}\` opened your bio!` })
+            body: JSON.stringify({ content: `🔔 **Authentication Success:** User verified as \`${name}\`!` })
         }).catch(err => console.error("Logging failed:", err));
     }
 
@@ -184,7 +177,6 @@ function showBio(visitorName) {
         "LIKES:      Video games and Marvel comics.",
         "CURRENTLY:  Exploring new tech and building cool spaces.",
         "--------------------------------------------------",
-        "TRAFFIC:    " + totalVisits + " total packets processed.",
         "STATUS:     Catch me on Instagram DMs if you want to chat.",
         "\nsession_closed_bye@instagram_bio:~$"
     ];
@@ -208,7 +200,7 @@ function showBio(visitorName) {
 }
 
 window.onload = () => { 
-    fetchHitCounter(); 
+    alertPageLoad(); // Fire instant alert to Discord on page load
     initTerminal(false); 
 };
 </script>
